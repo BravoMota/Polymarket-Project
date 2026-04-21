@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+dist/
+build/
+
+# Environment
+.env
+
+# Data (generated, not source)
+data/handoff/
+data/logs/
+data/snapshots/
+
+# IDE
+.vscode/
+.idea/

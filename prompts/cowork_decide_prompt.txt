@@ -1,0 +1,28 @@
+Paper mode only. No real trading.
+
+## Delta-first workflow (token-efficient)
+1. Read `data/handoff/latest_delta.json` first.
+   - Contains only NEW or CHANGED opportunities since last scan.
+   - If delta is empty or has < 2 entries, skip to step 2.
+2. If more context needed, read `data/handoff/latest_shortlist.json`.
+   - Full ranked shortlist sorted by best edge/EV.
+
+## Output format
+Return a JSON array only. No prose outside JSON.
+
+For each market include:
+- market_id
+- action (YES|NO|SKIP)
+- confidence (0..1)
+- edge_bps
+- expected_value_per_1usd
+- risk_flags (array, empty if none)
+- rationale_bullets (max 2 short bullets)
+
+## Decision rules
+- SKIP if liquidity_score < 0.1 OR spread_pct > 0.05 OR abs(edge_bps) < 50.
+- SKIP if confidence < 0.60.
+- YES if edge_bps > 0 and confidence >= 0.65.
+- NO if edge_bps < 0 and confidence >= 0.65.
+- When in doubt, SKIP — paper mode, preserve capital.
+- Keep output concise and machine-parseable.
