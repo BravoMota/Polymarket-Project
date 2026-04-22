@@ -30,7 +30,18 @@ Bravo: paste `latest_delta.json` into Claude Cowork to get trade decisions. If d
 
 ## Quickstart
 
+macOS / Linux:
+
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+cp .env.example .env
+```
+
+Windows:
+
+```bat
 python -m venv .venv
 .venv\Scripts\activate
 pip install -e ".[dev]"
@@ -60,13 +71,23 @@ Other commands:
 - `polyclaude scan` — save raw snapshot to `data/snapshots/`
 - `polyclaude report` — regenerate report from existing ledger
 
-## Hourly Automation (Windows)
+## Hourly Automation
 
-```
+Windows:
+
+```bat
 scripts\run_cowork_cycle.bat
 ```
 
 Wire to Windows Task Scheduler (hourly trigger) to run automatically.
+
+macOS / Linux:
+
+```bash
+python scripts/run_cycle.py
+```
+
+Equivalent entry point — runs `export-shortlist`, verifies handoff files, appends to `data/logs/hourly_scan.log`, and prints the Cowork next-steps block. Schedule via `cron` or `launchd` if desired.
 
 ## Cowork Token Strategy
 
@@ -88,7 +109,17 @@ Proportional to implied probability — prevents low-probability markets from ge
 
 ## Running Tests
 
+macOS / Linux:
+
 ```bash
+.venv/bin/pytest tests/ -v
+# or, after activating the venv:
+pytest tests/ -v
+```
+
+Windows:
+
+```bat
 .venv\Scripts\pytest tests/ -v
 ```
 

@@ -17,3 +17,4 @@ data/snapshots/
 # IDE
 .vscode/
 .idea/
+data/.DS_Store

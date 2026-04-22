@@ -10,7 +10,7 @@ from polyclaude_bot.config import Settings
 from polyclaude_bot.data.polymarket_client import PolymarketClient
 from polyclaude_bot.eval.backtest import summarize_ledger
 from polyclaude_bot.eval.calibration import calibration_proxy
-from polyclaude_bot.features.feature_engine import compute_features
+from polyclaude_bot.features.feature_engine import MarketFeatures, compute_features
 from polyclaude_bot.llm.claude_client import ClaudeClient
 from polyclaude_bot.llm.prompt_templates import build_decision_prompt
 from polyclaude_bot.paper.ledger import append_entry
@@ -72,6 +72,52 @@ def report() -> None:
     out.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     print(f"[green]Wrote report:[/green] {out}")
     print(json.dumps(payload, indent=2))
+
+
+_LIQUIDITY_SCORE_DENOM = 100_000.0
+_DELTA_THRESHOLD_BPS = 10.0
+
+
+def _apply_filters(
+    rows: list[MarketFeatures],
+    *,
+    min_liquidity: float,
+    max_spread: float,
+    min_abs_edge_bps: float,
+) -> list[MarketFeatures]:
+    return [
+        r
+        for r in rows
+        if r.liquidity_score * _LIQUIDITY_SCORE_DENOM >= min_liquidity
+        and r.spread_pct <= max_spread
+        and abs(r.edge_bps) >= min_abs_edge_bps
+    ]
+
+
+def _compute_delta(
+    current: list[dict],
+    previous_path: Path,
+) -> list[dict]:
+    try:
+        parsed = json.loads(Path(previous_path).read_text(encoding="utf-8"))
+        prev_map: dict[str, float] | None = {
+            row["market_id"]: float(row.get("edge_bps", 0.0))
+            for row in parsed
+            if isinstance(row, dict) and "market_id" in row
+        }
+    except (FileNotFoundError, OSError, json.JSONDecodeError, TypeError, ValueError):
+        prev_map = None
+
+    out: list[dict] = []
+    for row in current:
+        mid = row.get("market_id")
+        edge = float(row.get("edge_bps", 0.0))
+        if prev_map is None or mid not in prev_map:
+            out.append({**row, "_delta": "new"})
+            continue
+        if abs(edge - prev_map[mid]) > _DELTA_THRESHOLD_BPS:
+            out.append({**row, "_delta": "changed"})
+    return out
 
 
 if __name__ == "__main__":

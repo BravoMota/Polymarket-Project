@@ -32,8 +32,9 @@ data/handoff/
   latest_delta.json       # only new/changed >10 bps vs prior run
 
 scripts/
-  run_cowork_cycle.bat    # hourly pipeline runner
+  run_cowork_cycle.bat    # hourly pipeline runner (Windows)
   hourly_scan.bat
+  run_cycle.py            # cross-platform runner (mac/linux equivalent of the .bat pair)
 ```
 
 ## Pipeline
@@ -90,14 +91,22 @@ polyclaude export-shortlist [OPTIONS]
 - `paper_mode=true` always — no live trading ever
 - No LLM calls in the pipeline — Cowork is the LLM step
 - No paid API usage in `export-shortlist` — pipeline must be free/offline
-- Windows 11 — use `.venv\Scripts\python`, `Path()` for paths, BAT syntax for scripts
+- Cross-platform — use `Path()` for paths; Windows uses `.venv\Scripts\python` + BAT scripts, macOS/Linux uses `.venv/bin/python` + `scripts/run_cycle.py`
 
 ## Running tests
+
+Windows:
 
 ```
 .venv\Scripts\pytest tests/ -v
 ```
 
+macOS / Linux:
+
+```
+.venv/bin/pytest tests/ -v
+```
+
 ## Before starting a session
 
-Run `start_session.bat` from desktop (starts claude-mem worker + transcript watcher).
+Run `start_session.bat` from desktop (starts claude-mem worker + transcript watcher). Windows-only; there is no mac equivalent yet and it is not required for the pipeline itself.
