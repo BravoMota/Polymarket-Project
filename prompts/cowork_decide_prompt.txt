@@ -9,6 +9,7 @@ Paper mode only. No real trading.
 
 ## Output format
 Return a JSON array only. No prose outside JSON.
+Wrap the entire JSON response in a single triple backtick code block and include nothing outside it.
 
 For each market include:
 - market_id
