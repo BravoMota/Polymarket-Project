@@ -89,6 +89,28 @@ python scripts/run_cycle.py
 
 Equivalent entry point — runs `export-shortlist`, verifies handoff files, appends to `data/logs/hourly_scan.log`, and prints the Cowork next-steps block. Schedule via `cron` or `launchd` if desired.
 
+## Web UI
+
+Local dashboard that renders the handoff files as Polymarket-style cards, exposes buttons for every CLI command, and lets you edit the five tunable `.env` values. Single Python process, no Node build step.
+
+```bash
+# macOS / Linux
+.venv/bin/uvicorn polyclaude_bot.web.app:app --reload --port 8000
+
+# Windows
+.venv\Scripts\uvicorn polyclaude_bot.web.app:app --reload --port 8000
+```
+
+Open `http://localhost:8000`.
+
+Features:
+
+- **Shortlist / Delta / Decisions panels** — rendered live from `data/handoff/latest_shortlist.json`, `latest_delta.json`, `cowork_decisions.json`. Each panel has a refresh button and updates automatically after a command finishes.
+- **Run buttons** — `scan`, `export-shortlist`, `report` run free/local. `decide` and `paper-run` call the paid Anthropic API and show a confirmation dialog before firing. Output streams live via Server-Sent Events.
+- **Tunables form** — edits `SCAN_LIMIT`, `MIN_LIQUIDITY_USD`, `MAX_SPREAD_PCT`, `MIN_ABS_EDGE_BPS`, `MIN_CONFIDENCE`. Writes back to `.env` in place, preserving comments and every other key byte-for-byte. Changes take effect on the next run.
+
+The UI is intended for `localhost` only: no auth, no remote deployment.
+
 ## Cowork Token Strategy
 
 1. Read `latest_delta.json` first — typically 0–3 items

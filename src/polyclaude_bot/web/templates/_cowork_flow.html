@@ -1,0 +1,75 @@
+<div class="rounded-xl border border-bg-border bg-bg-card p-5">
+  <div class="flex items-start justify-between mb-4">
+    <div>
+      <h3 class="text-sm font-semibold tracking-wider uppercase text-pm-muted">Cowork flow</h3>
+      <p class="text-xs text-pm-muted mt-0.5">Clipboard bridge to Claude Cowork.</p>
+    </div>
+    <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-bg-raised border border-bg-border text-pm-muted">3 actions</span>
+  </div>
+
+  <div class="space-y-2">
+    <button
+      type="button"
+      class="w-full text-left rounded-lg border border-bg-border bg-bg-raised hover:border-pm-primary/60 hover:bg-bg-card transition px-3 py-3 group"
+      data-copy-url="/api/cowork/prompt"
+    >
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-semibold">Copy analysis prompt</span>
+        <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-pm-primary/15 text-pm-primary border border-pm-primary/30">copy</span>
+      </div>
+      <p class="text-xs text-pm-muted mt-1 leading-snug">Just the prompt — use when the delta is tiny.</p>
+      <p class="font-mono text-[11px] text-pm-muted/80 mt-1">prompts/cowork_decide_prompt.txt</p>
+    </button>
+
+    <button
+      type="button"
+      class="w-full text-left rounded-lg border border-bg-border bg-bg-raised hover:border-pm-primary/60 hover:bg-bg-card transition px-3 py-3"
+      data-copy-url="/api/cowork/prompt-with-shortlist"
+    >
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-semibold">Copy prompt + shortlist</span>
+        <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-pm-primary/15 text-pm-primary border border-pm-primary/30">copy</span>
+      </div>
+      <p class="text-xs text-pm-muted mt-1 leading-snug">Prompt plus the full shortlist JSON as context.</p>
+      <p class="font-mono text-[11px] text-pm-muted/80 mt-1">prompt + latest_shortlist.json</p>
+    </button>
+
+    <details class="group rounded-lg border border-bg-border bg-bg-raised">
+      <summary class="cursor-pointer list-none px-3 py-3 flex items-center justify-between select-none">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-semibold">Paste cowork decisions</span>
+            <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-pm-warn/15 text-pm-warn border border-pm-warn/30">paste</span>
+          </div>
+          <p class="text-xs text-pm-muted mt-1 leading-snug">Overwrites cowork_decisions.json.</p>
+        </div>
+        <span class="text-pm-muted text-lg leading-none ml-2 transition group-open:rotate-45">+</span>
+      </summary>
+      <form
+        class="px-3 pb-3 pt-1 space-y-2"
+        hx-post="/api/handoff/decisions"
+        hx-target="#decisions-panel"
+        hx-swap="innerHTML"
+        hx-on::after-request="if(event.detail.successful){this.closest('details').open=false;this.querySelector('textarea').value='';}"
+      >
+        <textarea
+          name="text"
+          rows="8"
+          required
+          placeholder='[{"market_id": "...", "action": "SKIP", ...}]'
+          class="w-full rounded-lg bg-bg-base border border-bg-border px-3 py-2 font-mono text-xs text-slate-100 focus:outline-none focus:border-pm-primary focus:ring-1 focus:ring-pm-primary"
+        ></textarea>
+        <div class="flex items-center gap-2">
+          <button
+            type="submit"
+            class="px-3 py-1.5 rounded-lg bg-pm-primary text-white text-xs font-semibold hover:bg-pm-primary/90"
+          >Save</button>
+          <button
+            type="reset"
+            class="px-3 py-1.5 rounded-lg border border-bg-border text-xs text-pm-muted hover:text-slate-100"
+          >Clear</button>
+        </div>
+      </form>
+    </details>
+  </div>
+</div>

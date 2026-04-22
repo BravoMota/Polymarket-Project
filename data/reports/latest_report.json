@@ -1,0 +1,13 @@
+{
+  "summary": {
+    "trades": 0,
+    "yes": 0,
+    "no": 0,
+    "skip": 0,
+    "avg_confidence": 0.0
+  },
+  "calibration": {
+    "confidence_distribution": {},
+    "note": "No ledger yet"
+  }
+}

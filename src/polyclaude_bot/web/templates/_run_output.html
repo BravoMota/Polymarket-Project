@@ -1,0 +1,59 @@
+{% if job is defined and job %}
+<div class="flex items-center justify-between px-4 py-2 border-b border-bg-border">
+  <div class="flex items-center gap-2">
+    <span class="inline-block w-2 h-2 rounded-full bg-pm-primary animate-pulse"></span>
+    <span class="font-mono text-sm">polyclaude {{ job.command }}</span>
+  </div>
+  <span id="run-status-{{ job.id }}" class="text-xs text-pm-muted">streaming…</span>
+</div>
+<pre id="run-log-{{ job.id }}" class="p-4 text-xs font-mono text-slate-200 whitespace-pre-wrap leading-relaxed max-h-[280px] overflow-auto"></pre>
+<script>
+(function () {
+  const jobId = {{ job.id | tojson }};
+  const logEl = document.getElementById("run-log-" + jobId);
+  const statusEl = document.getElementById("run-status-" + jobId);
+  const source = new EventSource("/api/run/stream/" + jobId);
+  const append = (text) => {
+    logEl.textContent += text + "\n";
+    logEl.scrollTop = logEl.scrollHeight;
+  };
+  source.addEventListener("log", (e) => append(e.data));
+  source.addEventListener("done", (e) => {
+    source.close();
+    const parts = Object.fromEntries(
+      e.data.split(" ").map((p) => p.split("=")).filter((p) => p.length === 2)
+    );
+    const code = parts.exit_code ?? "?";
+    if (code === "0") {
+      statusEl.className = "text-xs text-pm-yes";
+      statusEl.textContent = "done (exit 0)";
+    } else {
+      statusEl.className = "text-xs text-pm-no";
+      statusEl.textContent = "failed (exit " + code + ")";
+    }
+    const refresh = (parts.refresh || "").split(",").filter(Boolean);
+    const targetMap = {
+      shortlist: ["#shortlist-panel", "/partials/shortlist"],
+      delta: ["#delta-panel", "/partials/delta"],
+      decisions: ["#decisions-panel", "/partials/decisions"],
+    };
+    refresh.forEach((name) => {
+      const entry = targetMap[name];
+      if (!entry) return;
+      const [selector, url] = entry;
+      const el = document.querySelector(selector);
+      if (el) htmx.ajax("GET", url, { target: selector, swap: "innerHTML" });
+    });
+  });
+  source.onerror = () => {
+    statusEl.className = "text-xs text-pm-no";
+    statusEl.textContent = "connection lost";
+    source.close();
+  };
+})();
+</script>
+{% else %}
+<div class="flex items-center justify-center text-pm-muted text-sm py-10">
+  Click a button above to run a command. Output appears here.
+</div>
+{% endif %}

@@ -1,0 +1,46 @@
+{% set file = delta %}
+<div class="flex items-center justify-between mb-3">
+  <div>
+    <h3 class="text-sm font-semibold tracking-wider uppercase text-pm-muted">Delta (new / changed)</h3>
+    <p class="text-xs text-pm-muted mt-0.5">
+      {{ file.count }} entries · updated {{ file.mtime_display }}
+    </p>
+  </div>
+  <button
+    class="text-xs text-pm-muted hover:text-slate-100 px-2 py-1 rounded border border-bg-border"
+    hx-get="/partials/delta"
+    hx-target="#delta-panel"
+    hx-swap="innerHTML"
+  >refresh</button>
+</div>
+
+{% if file.error %}
+<div class="rounded-xl border border-pm-no/40 bg-pm-no/10 text-pm-no text-sm px-4 py-3">
+  could not load {{ file.path }} — {{ file.error }}
+</div>
+{% elif not file.exists or file.count == 0 %}
+<div class="rounded-xl border border-bg-border bg-bg-card text-pm-muted text-sm px-4 py-6 text-center">
+  no changes since the previous run
+</div>
+{% else %}
+<div class="space-y-2">
+  {% for row in file.rows %}
+    {% set tag = row._delta or "new" %}
+    {% set edge = row.edge_bps or 0 %}
+    <article class="rounded-lg border border-bg-border bg-bg-card px-4 py-3 flex items-start gap-3">
+      {% if tag == "new" %}
+      <span class="shrink-0 text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded bg-pm-primary/20 text-pm-primary border border-pm-primary/30">new</span>
+      {% else %}
+      <span class="shrink-0 text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded bg-pm-warn/20 text-pm-warn border border-pm-warn/30">changed</span>
+      {% endif %}
+      <div class="flex-1 min-w-0">
+        <p class="font-medium truncate">{{ row.question or row.market_id }}</p>
+        <p class="text-[11px] font-mono text-pm-muted mt-0.5">id {{ row.market_id }}</p>
+      </div>
+      <span class="shrink-0 font-mono text-sm font-semibold {% if edge >= 0 %}text-pm-yes{% else %}text-pm-no{% endif %}">
+        {{ "%+.0f"|format(edge) }} bps
+      </span>
+    </article>
+  {% endfor %}
+</div>
+{% endif %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)_300px]">
+  <aside id="cowork-flow-panel" class="lg:sticky lg:top-24 lg:self-start">
+    {% include "_cowork_flow.html" %}
+  </aside>
+
+  <section class="min-w-0">
+    <div class="mb-4 flex items-center justify-between">
+      <div>
+        <h2 class="text-sm font-semibold tracking-wider uppercase text-pm-muted">Pipeline controls</h2>
+        <p class="text-xs text-pm-muted mt-1">Triggers the CLI on your machine. Output streams below.</p>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+      {% for btn in buttons %}
+      <button
+        type="button"
+        class="group text-left rounded-xl border border-bg-border bg-bg-card hover:border-pm-primary/60 hover:bg-bg-raised transition p-4 {% if btn.dangerous %}ring-1 ring-pm-warn/20{% endif %}"
+        hx-post="/api/run/{{ btn.command }}"
+        hx-target="#run-output"
+        hx-swap="innerHTML"
+        {% if btn.dangerous %}hx-confirm="This command calls the paid Anthropic API. Continue?"{% endif %}
+      >
+        <div class="flex items-center justify-between">
+          <span class="font-semibold">{{ btn.label }}</span>
+          {% if btn.dangerous %}
+          <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-pm-warn/15 text-pm-warn border border-pm-warn/30">paid</span>
+          {% else %}
+          <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-pm-primary/15 text-pm-primary border border-pm-primary/30">free</span>
+          {% endif %}
+        </div>
+        <p class="text-xs text-pm-muted mt-1.5 leading-snug">{{ btn.description }}</p>
+        <p class="font-mono text-[11px] text-pm-muted/80 mt-2">polyclaude {{ btn.command }}</p>
+      </button>
+      {% endfor %}
+    </div>
+
+    <div class="mt-6">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-sm font-semibold tracking-wider uppercase text-pm-muted">Live output</h3>
+        <span class="text-xs text-pm-muted">stdout + stderr, streamed via SSE</span>
+      </div>
+      <div id="run-output" class="rounded-xl border border-bg-border bg-bg-card min-h-[180px]">
+        {% include "_run_output.html" with context %}
+      </div>
+    </div>
+
+    <div id="shortlist-panel" class="mt-8">
+      {% include "_shortlist.html" %}
+    </div>
+
+    <div id="delta-panel" class="mt-8">
+      {% include "_delta.html" %}
+    </div>
+
+    <div id="decisions-panel" class="mt-8">
+      {% include "_decisions.html" %}
+    </div>
+  </section>
+
+  <aside id="env-panel" class="lg:sticky lg:top-24 lg:self-start">
+    {% include "_env_form.html" %}
+  </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% set file = shortlist %}
+<div class="flex items-center justify-between mb-3">
+  <div>
+    <h3 class="text-sm font-semibold tracking-wider uppercase text-pm-muted">Shortlist</h3>
+    <p class="text-xs text-pm-muted mt-0.5">
+      {{ file.count }} markets · updated {{ file.mtime_display }}
+    </p>
+  </div>
+  <div class="flex items-center gap-2">
+    <button
+      type="button"
+      class="text-xs text-pm-muted hover:text-slate-100 px-2 py-1 rounded border border-bg-border"
+      data-copy-url="/api/handoff/shortlist.json"
+    >copy JSON</button>
+    <button
+      class="text-xs text-pm-muted hover:text-slate-100 px-2 py-1 rounded border border-bg-border"
+      hx-get="/partials/shortlist"
+      hx-target="#shortlist-panel"
+      hx-swap="innerHTML"
+    >refresh</button>
+  </div>
+</div>
+
+{% if file.error %}
+<div class="rounded-xl border border-pm-no/40 bg-pm-no/10 text-pm-no text-sm px-4 py-3">
+  could not load {{ file.path }} — {{ file.error }}
+</div>
+{% elif not file.exists %}
+<div class="rounded-xl border border-bg-border bg-bg-card text-pm-muted text-sm px-4 py-6 text-center">
+  no shortlist yet — run <span class="font-mono text-slate-200">export-shortlist</span>
+</div>
+{% elif file.count == 0 %}
+<div class="rounded-xl border border-bg-border bg-bg-card text-pm-muted text-sm px-4 py-6 text-center">
+  shortlist is empty — filters may be too strict
+</div>
+{% else %}
+<div class="space-y-3">
+  {% for row in file.rows %}
+    {% set implied = row.market_implied_prob_yes or 0 %}
+    {% set estimated = row.estimated_prob_yes or 0 %}
+    {% set edge = row.edge_bps or 0 %}
+    <article class="rounded-xl border border-bg-border bg-bg-card hover:border-pm-primary/40 transition p-4">
+      <header class="flex items-start justify-between gap-4">
+        <h4 class="font-semibold leading-snug line-clamp-2">{{ row.question or row.market_id }}</h4>
+        <span class="shrink-0 font-mono text-sm font-semibold {% if edge >= 0 %}text-pm-yes{% else %}text-pm-no{% endif %}">
+          {{ "%+.0f"|format(edge) }} bps
+        </span>
+      </header>
+      <div class="mt-3">
+        <div class="flex items-center gap-2 text-xs text-pm-muted">
+          <span>Yes {{ "%.1f"|format(implied * 100) }}%</span>
+          <span class="text-pm-muted/60">→</span>
+          <span class="text-slate-200">est {{ "%.1f"|format(estimated * 100) }}%</span>
+        </div>
+        <div class="relative mt-1.5 h-1.5 rounded-full bg-bg-border overflow-hidden">
+          <div class="absolute inset-y-0 left-0 bg-pm-primary/70" style="width: {{ (implied * 100)|round(1) }}%;"></div>
+          <div
+            class="absolute top-0 bottom-0 w-0.5 bg-pm-yes"
+            style="left: {{ (estimated * 100)|round(1) }}%;"
+          ></div>
+        </div>
+      </div>
+      <footer class="mt-3 flex flex-wrap gap-2 text-[11px] font-mono">
+        <span class="px-2 py-0.5 rounded bg-bg-raised border border-bg-border text-pm-muted">
+          liq {{ "%.2f"|format(row.liquidity_score or 0) }}
+        </span>
+        <span class="px-2 py-0.5 rounded bg-bg-raised border border-bg-border text-pm-muted">
+          spread {{ "%.2f"|format((row.spread_pct or 0) * 100) }}%
+        </span>
+        <span class="px-2 py-0.5 rounded bg-bg-raised border border-bg-border text-pm-muted">
+          ev/$1 {{ "%+.3f"|format(row.expected_value_per_1usd or 0) }}
+        </span>
+        <span class="ml-auto text-pm-muted/70">id {{ row.market_id }}</span>
+      </footer>
+    </article>
+  {% endfor %}
+</div>
+{% endif %}

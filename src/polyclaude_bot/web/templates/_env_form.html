@@ -1,0 +1,63 @@
+<form
+  class="rounded-xl border border-bg-border bg-bg-card p-5"
+  hx-post="/api/env"
+  hx-target="#env-panel"
+  hx-swap="innerHTML"
+>
+  <div class="flex items-start justify-between mb-4">
+    <div>
+      <h3 class="text-sm font-semibold tracking-wider uppercase text-pm-muted">Tunables (.env)</h3>
+      <p class="text-xs text-pm-muted mt-0.5">Changes take effect on the next run.</p>
+    </div>
+    <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-bg-raised border border-bg-border text-pm-muted">
+      {{ env_fields|length }} fields
+    </span>
+  </div>
+
+  <div class="space-y-4">
+    {% for field in env_fields %}
+    <label class="block">
+      <div class="flex items-baseline justify-between">
+        <span class="text-sm font-medium text-slate-100">{{ field.label }}</span>
+        <span class="font-mono text-[11px] text-pm-muted">{{ field.key }}</span>
+      </div>
+      <input
+        type="number"
+        step="{{ field.step }}"
+        min="{{ field.min_value }}"
+        {% if field.max_value is not none %}max="{{ field.max_value }}"{% endif %}
+        name="{{ field.key }}"
+        value="{{ env_values[field.key] }}"
+        inputmode="decimal"
+        class="mt-1.5 block w-full rounded-lg bg-bg-raised border border-bg-border px-3 py-2 font-mono text-sm text-slate-100 focus:outline-none focus:border-pm-primary focus:ring-1 focus:ring-pm-primary"
+      />
+      <p class="mt-1 text-xs text-pm-muted">{{ field.help_text }}</p>
+    </label>
+    {% endfor %}
+  </div>
+
+  {% if env_error %}
+  <div class="mt-4 rounded-lg border border-pm-no/40 bg-pm-no/10 text-pm-no text-xs px-3 py-2">
+    {{ env_error }}
+  </div>
+  {% endif %}
+  {% if env_saved %}
+  <div class="mt-4 rounded-lg border border-pm-yes/40 bg-pm-yes/10 text-pm-yes text-xs px-3 py-2">
+    Saved to .env
+  </div>
+  {% endif %}
+
+  <div class="mt-5 flex items-center gap-2">
+    <button
+      type="submit"
+      class="px-4 py-2 rounded-lg bg-pm-primary text-white text-sm font-semibold hover:bg-pm-primary/90 focus:outline-none focus:ring-2 focus:ring-pm-primary/60"
+    >Save</button>
+    <button
+      type="button"
+      class="px-3 py-2 rounded-lg border border-bg-border text-sm text-pm-muted hover:text-slate-100"
+      hx-get="/partials/env"
+      hx-target="#env-panel"
+      hx-swap="innerHTML"
+    >Reload</button>
+  </div>
+</form>

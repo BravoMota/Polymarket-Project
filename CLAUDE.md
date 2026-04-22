@@ -24,6 +24,12 @@ src/polyclaude_bot/
   risk/risk_guard.py
   paper/ledger.py
   llm/claude_client.py
+  web/                    # FastAPI + HTMX + Tailwind local UI
+    app.py                # routes
+    runner.py             # subprocess + SSE streaming for CLI commands
+    env_store.py          # whitelisted .env read/write
+    handoff_reader.py     # tolerant loaders for data/handoff/*.json
+    templates/ static/    # Jinja + Tailwind CDN
   eval/
 
 data/handoff/
@@ -106,6 +112,19 @@ macOS / Linux:
 ```
 .venv/bin/pytest tests/ -v
 ```
+
+## Web UI
+
+```
+.venv/bin/uvicorn polyclaude_bot.web.app:app --reload --port 8000   # macOS/Linux
+.venv\Scripts\uvicorn polyclaude_bot.web.app:app --reload --port 8000  # Windows
+```
+
+- Renders `data/handoff/*.json` as Polymarket-style cards.
+- Buttons run the five CLI commands in a subprocess; output streams via SSE.
+- `decide` and `paper-run` trigger a confirm dialog (paid Anthropic API).
+- `.env` editor is whitelisted to `SCAN_LIMIT`, `MIN_LIQUIDITY_USD`, `MAX_SPREAD_PCT`, `MIN_ABS_EDGE_BPS`, `MIN_CONFIDENCE`. All other keys are preserved byte-for-byte on save.
+- Localhost only — no auth, no remote deploy.
 
 ## Before starting a session
 

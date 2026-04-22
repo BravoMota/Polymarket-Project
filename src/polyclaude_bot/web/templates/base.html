@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}polyclaude{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: { base: "#0b0f1a", raised: "#121826", card: "#151c2c", border: "#1f2a40" },
+            pm: {
+              primary: "#2d9cdb",
+              yes: "#27ae60",
+              no: "#eb5757",
+              warn: "#f2994a",
+              muted: "#8a93a6",
+            },
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="{{ request.url_for('static', path='polyclaude.css') }}" />
+</head>
+<body class="min-h-full bg-bg-base text-slate-100 font-sans antialiased">
+  <header class="border-b border-bg-border bg-bg-raised/80 backdrop-blur sticky top-0 z-20">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-pm-primary/20 border border-pm-primary/40 flex items-center justify-center">
+          <span class="text-pm-primary font-bold">P</span>
+        </div>
+        <div>
+          <h1 class="text-lg font-semibold tracking-tight">polyclaude</h1>
+          <p class="text-xs text-pm-muted">paper-trading analyst</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-pm-yes/15 text-pm-yes border border-pm-yes/30">
+          PAPER MODE
+        </span>
+        <a
+          href="https://gamma-api.polymarket.com/markets?active=true&closed=false"
+          target="_blank"
+          rel="noopener"
+          class="px-2.5 py-1 rounded-full text-xs font-medium bg-bg-card text-pm-muted border border-bg-border hover:text-slate-100"
+        >gamma-api</a>
+      </div>
+    </div>
+  </header>
+  <main class="max-w-7xl mx-auto px-6 py-8">
+    {% block content %}{% endblock %}
+  </main>
+  <script>
+    (function () {
+      const RESTORE_MS = 1500;
+      document.addEventListener("click", async (event) => {
+        const btn = event.target.closest("[data-copy-url]");
+        if (!btn) return;
+        event.preventDefault();
+        const url = btn.dataset.copyUrl;
+        const original = btn.dataset.originalLabel ?? btn.innerHTML;
+        btn.dataset.originalLabel = original;
+        const flash = (msg, klass) => {
+          btn.textContent = msg;
+          btn.dataset.flashed = klass;
+          btn.classList.add(klass);
+          setTimeout(() => {
+            btn.innerHTML = original;
+            btn.classList.remove(klass);
+            delete btn.dataset.flashed;
+          }, RESTORE_MS);
+        };
+        try {
+          const resp = await fetch(url, { credentials: "same-origin" });
+          if (!resp.ok) throw new Error("fetch " + resp.status);
+          const text = await resp.text();
+          if (!navigator.clipboard) throw new Error("clipboard API unavailable");
+          await navigator.clipboard.writeText(text);
+          flash("copied", "text-pm-yes");
+        } catch (err) {
+          console.error("copy failed", err);
+          flash("copy failed", "text-pm-no");
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

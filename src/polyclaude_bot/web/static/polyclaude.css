@@ -1,0 +1,39 @@
+/* Minor tweaks that layer on top of Tailwind utilities. */
+
+/* Force the dark theme on the document scroll region so the top overscroll
+   area on macOS doesn't flash white. */
+html,
+body {
+  background-color: #0b0f1a;
+}
+
+/* Tailwind doesn't ship line-clamp plugin by default in the CDN build, so
+   emulate `line-clamp-2` for the card questions. */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Chrome removes number-input spinners by default in dark; keep the layout
+   steady when hovering. */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Subtle scrollbars inside the run output panel so the dark theme is not
+   interrupted by system-default bars. */
+#run-output pre::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+#run-output pre::-webkit-scrollbar-thumb {
+  background: #1f2a40;
+  border-radius: 3px;
+}
