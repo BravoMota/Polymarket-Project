@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import csv as _csv
 import json
+from dataclasses import asdict
 from pathlib import Path
+from typing import Any
 
 import typer
 from rich import print
@@ -76,6 +79,7 @@ def report() -> None:
 
 _LIQUIDITY_SCORE_DENOM = 100_000.0
 _DELTA_THRESHOLD_BPS = 10.0
+_HANDOFF_DIR = Path("data/handoff")
 
 
 def _apply_filters(
@@ -118,6 +122,57 @@ def _compute_delta(
         if abs(edge - prev_map[mid]) > _DELTA_THRESHOLD_BPS:
             out.append({**row, "_delta": "changed"})
     return out
+
+
+def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
+    fieldnames = list(rows[0].keys()) if rows else ["market_id", "question", "edge_bps"]
+    with path.open("w", encoding="utf-8", newline="") as fh:
+        writer = _csv.DictWriter(fh, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({k: row.get(k, "") for k in fieldnames})
+
+
+@app.command("export-shortlist")
+def export_shortlist(
+    limit: int = typer.Option(20, help="Markets to fetch"),
+    top_n: int = typer.Option(5, "--top-n", help="Top opportunities to export"),
+    min_liquidity: float = typer.Option(10_000.0, "--min-liquidity", help="Min liquidity USD"),
+    max_spread: float = typer.Option(0.05, "--max-spread", help="Max spread fraction"),
+    min_abs_edge_bps: float = typer.Option(50.0, "--min-abs-edge-bps", help="Min |edge| bps"),
+) -> None:
+    """Fetch → filter → rank → write handoff files for Claude Cowork."""
+    client = PolymarketClient()
+    markets = client.fetch_markets(limit=limit)
+    features = [compute_features(m) for m in markets]
+
+    filtered = _apply_filters(
+        features,
+        min_liquidity=min_liquidity,
+        max_spread=max_spread,
+        min_abs_edge_bps=min_abs_edge_bps,
+    )
+    filtered.sort(
+        key=lambda r: (abs(r.edge_bps), r.expected_value_per_1usd),
+        reverse=True,
+    )
+    top = filtered[:top_n]
+    rows: list[dict[str, Any]] = [asdict(r) for r in top]
+
+    _HANDOFF_DIR.mkdir(parents=True, exist_ok=True)
+    shortlist_json = _HANDOFF_DIR / "latest_shortlist.json"
+    shortlist_csv = _HANDOFF_DIR / "latest_shortlist.csv"
+    delta_json = _HANDOFF_DIR / "latest_delta.json"
+
+    # Delta must be computed against the prior shortlist before overwriting it.
+    delta = _compute_delta(rows, shortlist_json)
+
+    shortlist_json.write_text(json.dumps(rows, indent=2), encoding="utf-8")
+    _write_csv(shortlist_csv, rows)
+    delta_json.write_text(json.dumps(delta, indent=2), encoding="utf-8")
+
+    print(f"[green]Wrote {len(rows)} markets to[/green] {shortlist_json}")
+    print(f"[green]Delta entries:[/green] {len(delta)} → {delta_json}")
 
 
 if __name__ == "__main__":
