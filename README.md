@@ -48,6 +48,8 @@ pip install -e ".[dev]"
 copy .env.example .env
 ```
 
+That single `pip install -e ".[dev]"` also installs everything needed for the **Web UI** (FastAPI, Uvicorn, templates) — see [Web UI](#web-ui-local-dashboard) below.
+
 Run the pipeline once:
 
 ```bash
@@ -89,19 +91,49 @@ python scripts/run_cycle.py
 
 Equivalent entry point — runs `export-shortlist`, verifies handoff files, appends to `data/logs/hourly_scan.log`, and prints the Cowork next-steps block. Schedule via `cron` or `launchd` if desired.
 
-## Web UI
+## Web UI (local dashboard)
+
+The frontend is a **FastAPI + Jinja2** app served by **Uvicorn** in one Python process. There is no Node or separate frontend build. Dependencies (`fastapi`, `uvicorn[standard]`, `jinja2`, `python-multipart`) are listed in `pyproject.toml` as normal project dependencies — you do not install a second stack for the UI.
+
+### Run the Web UI
+
+1. **From the project root, use the same venv and install as the CLI** (this pulls FastAPI, Uvicorn, and templates):
+
+   ```bash
+   # macOS / Linux
+   source .venv/bin/activate
+   pip install -e ".[dev]"
+   ```
+
+   ```bat
+   rem Windows
+   .venv\Scripts\activate
+   pip install -e ".[dev]"
+   ```
+
+2. **Start the server** (use one of the following; all assume you are in the repository root with the venv activated):
+
+   ```bash
+   # macOS / Linux — explicit path
+   .venv/bin/uvicorn polyclaude_bot.web.app:app --reload --port 8000
+   ```
+
+   ```bash
+   # If the venv is active, you can call uvicorn directly
+   uvicorn polyclaude_bot.web.app:app --reload --port 8000
+   ```
+
+   ```bat
+   .venv\Scripts\uvicorn polyclaude_bot.web.app:app --reload --port 8000
+   ```
+
+3. **Open** [http://localhost:8000](http://localhost:8000) in your browser.
+
+If `uvicorn: command not found` or `ModuleNotFoundError: No such module` for `fastapi`, your environment is out of date: run `pip install -e ".[dev]"` again from the project root, or recreate the venv and reinstall.
+
+### What the Web UI does
 
 Local dashboard that renders the handoff files as Polymarket-style cards, exposes buttons for every CLI command, and lets you edit the five tunable `.env` values. Single Python process, no Node build step.
-
-```bash
-# macOS / Linux
-.venv/bin/uvicorn polyclaude_bot.web.app:app --reload --port 8000
-
-# Windows
-.venv\Scripts\uvicorn polyclaude_bot.web.app:app --reload --port 8000
-```
-
-Open `http://localhost:8000`.
 
 Features:
 
